@@ -2,6 +2,7 @@ package com.example.mybackgroundservices
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -10,12 +11,12 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.foregroundservice.STT.Stt
 import com.example.foregroundservice.STT.SttListener
-import com.example.mybackgroundservices.CHUNG_LIB.*
+import com.example.mybackgroundservices.CHUNG_LIB.CheckPermission_Func
+
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -44,31 +45,18 @@ class MainActivity : AppCompatActivity() {
         if(p && p1 )
         {
             isPermissionOK = true
-            //nut stop chuông BG
-            val mButtonStop = findViewById<Button>(R.id.mButtonStop)
-            mButtonStop.setOnClickListener {
-                Toast.makeText(this, "stop", Toast.LENGTH_SHORT).show()
-                Intent(this, RunningService::class.java).also {
-                    it.action = RunningService.Action.STOP.toString()
-                    startService(it)
-                }
-            }
+            activeButtons()
 
-            //nut record voice
-            val mButtonRecordVoice = findViewById<Button>(R.id.mButtonStartService)
-            mButtonRecordVoice.setOnClickListener {
-                if(isPermissionOK){
-                    Toast.makeText(this, "Start", Toast.LENGTH_SHORT).show()
-                    Intent(this, RunningService::class.java).also {
-                        it.action = RunningService.Action.START.toString()
-                        startService(it)
-                    }
-                }
 
-            }
         }
 
-
+        if(isPermissionOK){
+            Toast.makeText(this, "WAKEUP", Toast.LENGTH_SHORT).show()
+            Intent(this, RunningService::class.java).also {
+                it.action = RunningService.Action.START.toString()
+                startService(it)
+            }
+        }
 
 
     }
@@ -76,13 +64,54 @@ class MainActivity : AppCompatActivity() {
         stt = Stt(application, object : SttListener {
             override fun onSttLiveSpeechResult(liveSpeechResult: String) {
                 Log.d(application.packageName, "Speech result - $liveSpeechResult")
+
                 mToast?.cancel()
                 mToast = Toast.makeText(context, liveSpeechResult, Toast.LENGTH_SHORT)
                 mToast!!.show()
+
+                if(liveSpeechResult.contains("ello")){
+                    //val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("myapp://"))
+                    //startActivity(browserIntent)
+                    //val intent: Intent = Intent(baseContext, MainActivity  ::class.java)
+                    Log.d(application.packageName, "Speech result - HELLO TO REOPEN APP")
+                    //intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    //baseContext.startActivity(intent)
+
+                    triggerRebirth(context, MainActivity::class.java)
+
+                }
+                if(liveSpeechResult.contains("open")) {
+                    baseContext.startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+
+                            Uri.parse("http://google.com")
+                        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                }
+            }
+
+            fun triggerRebirth(context: Context, myClass: Class<*>?) {
+                Log.d(application.packageName, "Speech result - triggerRebirth")
+                val intent = Intent(context, myClass)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.setAction(Intent.ACTION_MAIN);
+                intent.addCategory(Intent.CATEGORY_LAUNCHER);
+                //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                mToast?.cancel()
+                mToast = Toast.makeText(context, "triggerRebirth", Toast.LENGTH_SHORT)
+                mToast!!.show()
+                baseContext.startActivity(intent)
+                //Runtime.getRuntime().exit(0)
             }
 
             override fun onSttFinalSpeechResult(speechResult: String) {
-                Log.d(application.packageName, "Final speech result - $speechResult")
+                Log.d(application.packageName, "Speech result - $speechResult")
+                mToast?.cancel()
+                mToast = Toast.makeText(context, speechResult, Toast.LENGTH_SHORT)
+                mToast!!.show()
             }
 
             override fun onSttSpeechError(errMsg: String) {
@@ -98,6 +127,33 @@ class MainActivity : AppCompatActivity() {
         if(requestCode == 1){
             isPermissionOK = true
             Toast.makeText(this, "ALL Permission granted", Toast.LENGTH_SHORT).show()
+
+            activeButtons()
+        }
+    }
+
+    fun activeButtons(){
+        //nut stop chuông BG
+        val mButtonStop = findViewById<Button>(R.id.mButtonStop)
+        mButtonStop.setOnClickListener {
+            Toast.makeText(this, "stop", Toast.LENGTH_SHORT).show()
+            Intent(this, RunningService::class.java).also {
+                it.action = RunningService.Action.STOP.toString()
+                startService(it)
+            }
+        }
+
+        //nut record voice
+        val mButtonRecordVoice = findViewById<Button>(R.id.mButtonStartService)
+        mButtonRecordVoice.setOnClickListener {
+            if(isPermissionOK){
+                Toast.makeText(this, "Start", Toast.LENGTH_SHORT).show()
+                Intent(this, RunningService::class.java).also {
+                    it.action = RunningService.Action.START.toString()
+                    startService(it)
+                }
+            }
+
         }
     }
 }
