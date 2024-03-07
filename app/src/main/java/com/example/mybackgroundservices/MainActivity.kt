@@ -1,10 +1,13 @@
 package com.example.mybackgroundservices
 
+import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.widget.Button
 import android.widget.Toast
@@ -39,6 +42,9 @@ class MainActivity : AppCompatActivity() {
         initSttEngine(this)
         //==check permission==//
 
+
+
+
         var p = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.RECORD_AUDIO)
         var p1 = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.POST_NOTIFICATIONS)
         //if all OK
@@ -46,8 +52,6 @@ class MainActivity : AppCompatActivity() {
         {
             isPermissionOK = true
             activeButtons()
-
-
         }
 
         if(isPermissionOK){
@@ -60,6 +64,10 @@ class MainActivity : AppCompatActivity() {
 
 
     }
+
+
+
+    //===================
     private fun initSttEngine(context: Context) {
         stt = Stt(application, object : SttListener {
             override fun onSttLiveSpeechResult(liveSpeechResult: String) {
@@ -93,17 +101,25 @@ class MainActivity : AppCompatActivity() {
 
             fun triggerRebirth(context: Context, myClass: Class<*>?) {
                 Log.d(application.packageName, "Speech result - triggerRebirth")
-                val intent = Intent(context, myClass)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                val intent = Intent(baseContext, myClass)
+                val pendIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY)
                 intent.setAction(Intent.ACTION_MAIN);
                 intent.addCategory(Intent.CATEGORY_LAUNCHER);
                 //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                intent.setComponent(
+                    ComponentName(
+                        applicationContext.packageName,
+                        MainActivity::class.java.getName()
+                    )
+                )
                 //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 mToast?.cancel()
                 mToast = Toast.makeText(context, "triggerRebirth", Toast.LENGTH_SHORT)
                 mToast!!.show()
-                baseContext.startActivity(intent)
+                //baseContext.startActivity(intent)
+                pendIntent.send(context, 0, intent)
                 //Runtime.getRuntime().exit(0)
             }
 
@@ -137,10 +153,11 @@ class MainActivity : AppCompatActivity() {
         val mButtonStop = findViewById<Button>(R.id.mButtonStop)
         mButtonStop.setOnClickListener {
             Toast.makeText(this, "stop", Toast.LENGTH_SHORT).show()
-            Intent(this, RunningService::class.java).also {
-                it.action = RunningService.Action.STOP.toString()
-                startService(it)
-            }
+            startActivity( Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION));
+            //Intent(this, RunningService::class.java).also {
+                //it.action = RunningService.Action.STOP.toString()
+                //startService(it)
+            //}
         }
 
         //nut record voice
