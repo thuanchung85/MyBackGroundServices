@@ -16,7 +16,7 @@
         android:layout_gravity="center"
         android:layout_marginTop="50pt"
         android:textSize="25dp"
-        android:text="THIS IS SHOW BACK GROUND SERVICE"
+        android:text="THIS IS SHOW BACK GROUND SERVICE FOR AI EAR WAKEUP"
         android:textAlignment="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -30,7 +30,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="30dp"
-        android:text="ACTION_MANAGE_OVERLAY_PERMISSION" />
+        android:text="ALLOW AI EAR WAKEUP" />
 
     <Button
         android:id="@+id/mButtonStartService"
@@ -39,7 +39,7 @@
         android:layout_margin="30dp"
 
         android:textColor="@color/black"
-        android:text="Start Service" />
+        android:text="Start AI EAR Service" />
 
 
 

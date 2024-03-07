@@ -19,7 +19,7 @@ public class CheckPermission_Func {
                 return false
             }
             else{
-                Toast.makeText(context, "OK Permission: " + nameOfPremission, Toast.LENGTH_SHORT).show()
+               // Toast.makeText(context, "OK Permission: " + nameOfPremission, Toast.LENGTH_SHORT).show()
                 return  true
             }
         }
