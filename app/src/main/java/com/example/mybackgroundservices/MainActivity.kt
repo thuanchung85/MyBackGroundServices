@@ -1,5 +1,6 @@
 package com.example.mybackgroundservices
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
@@ -7,6 +8,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import android.widget.Button
@@ -42,8 +44,8 @@ class MainActivity : AppCompatActivity() {
         initSttEngine(this)
         //==check permission==//
 
-
-
+        CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.WAKE_LOCK)
+        CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.TURN_SCREEN_ON)
 
         var p = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.RECORD_AUDIO)
         var p1 = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.POST_NOTIFICATIONS)
@@ -121,6 +123,15 @@ class MainActivity : AppCompatActivity() {
                 //baseContext.startActivity(intent)
                 pendIntent.send(context, 0, intent)
                 //Runtime.getRuntime().exit(0)
+                val powerManager = context.getSystemService(POWER_SERVICE) as PowerManager
+                if (!powerManager.isInteractive) { // if screen is not already on, turn it on (get wake_lock)
+                    @SuppressLint("InvalidWakeLockTag") val wl = powerManager.newWakeLock(
+                        PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.ON_AFTER_RELEASE or PowerManager.SCREEN_BRIGHT_WAKE_LOCK,
+                        "id:wakeupscreen"
+                    )
+                    wl.acquire()
+                }
+
             }
 
             override fun onSttFinalSpeechResult(speechResult: String) {
@@ -152,7 +163,7 @@ class MainActivity : AppCompatActivity() {
         //nut stop chuông BG
         val mButtonStop = findViewById<Button>(R.id.mButtonStop)
         mButtonStop.setOnClickListener {
-            Toast.makeText(this, "stop", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "ACTION_MANAGE_OVERLAY_PERMISSION ", Toast.LENGTH_SHORT).show()
             startActivity( Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION));
             //Intent(this, RunningService::class.java).also {
                 //it.action = RunningService.Action.STOP.toString()
