@@ -1,4 +1,4 @@
-package com.example.mybackgroundservices
+ package com.example.mybackgroundservices
 
 import android.annotation.SuppressLint
 import android.app.PendingIntent
@@ -14,10 +14,13 @@ import android.util.Log
 import android.widget.Button
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.common.util.Util
 import com.example.foregroundservice.STT.Stt
 import com.example.foregroundservice.STT.SttListener
 import com.example.mybackgroundservices.CHUNG_LIB.CheckPermission_Func
@@ -44,8 +47,8 @@ class MainActivity : AppCompatActivity() {
         initSttEngine(this)
         //==check permission==//
 
-        CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.WAKE_LOCK)
-        CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.TURN_SCREEN_ON)
+        //CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.WAKE_LOCK)
+        //CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.TURN_SCREEN_ON)
 
         var p = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.RECORD_AUDIO)
         var p1 = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.POST_NOTIFICATIONS)
@@ -75,9 +78,10 @@ class MainActivity : AppCompatActivity() {
             override fun onSttLiveSpeechResult(liveSpeechResult: String) {
                 Log.d(application.packageName, "Speech result - $liveSpeechResult")
 
-                mToast?.cancel()
-                mToast = Toast.makeText(context, liveSpeechResult, Toast.LENGTH_SHORT)
-                mToast!!.show()
+                //mToast?.cancel()
+               // Toast.makeText(context, liveSpeechResult, Toast.LENGTH_SHORT).show()
+               // mToast = Toast.makeText(context, liveSpeechResult, Toast.LENGTH_SHORT)
+               // mToast!!.show()
 
                 if(liveSpeechResult.contains("ello")){
                     //val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("myapp://"))
@@ -104,7 +108,13 @@ class MainActivity : AppCompatActivity() {
             fun triggerRebirth(context: Context, myClass: Class<*>?) {
                 Log.d(application.packageName, "Speech result - triggerRebirth")
                 val intent = Intent(baseContext, myClass)
-                val pendIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+                val pendingFlags = if (Util.SDK_INT >= 23) {
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                } else {
+                    PendingIntent.FLAG_UPDATE_CURRENT
+                }
+                
+                val pendIntent = PendingIntent.getActivity(context, 0, intent,pendingFlags)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY)
                 intent.setAction(Intent.ACTION_MAIN);
                 intent.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -117,9 +127,9 @@ class MainActivity : AppCompatActivity() {
                     )
                 )
                 //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                mToast?.cancel()
-                mToast = Toast.makeText(context, "triggerRebirth", Toast.LENGTH_SHORT)
-                mToast!!.show()
+                //mToast?.cancel()
+                //mToast = Toast.makeText(context, "triggerRebirth", Toast.LENGTH_SHORT)
+               // mToast!!.show()
                 //baseContext.startActivity(intent)
                 pendIntent.send(context, 0, intent)
                 //Runtime.getRuntime().exit(0)
@@ -136,9 +146,10 @@ class MainActivity : AppCompatActivity() {
 
             override fun onSttFinalSpeechResult(speechResult: String) {
                 Log.d(application.packageName, "Speech result - $speechResult")
-                mToast?.cancel()
-                mToast = Toast.makeText(context, speechResult, Toast.LENGTH_SHORT)
-                mToast!!.show()
+                //mToast?.cancel()
+                //mToast = Toast.makeText(context, speechResult, Toast.LENGTH_SHORT)
+                //mToast!!.show()
+                Toast.makeText(context, speechResult, Toast.LENGTH_SHORT).show()
             }
 
             override fun onSttSpeechError(errMsg: String) {
