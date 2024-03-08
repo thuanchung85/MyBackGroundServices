@@ -9,13 +9,13 @@ import androidx.core.content.ContextCompat
 
 public class CheckPermission_Func {
     object CheckPermission_Func {
-        fun checkPermission(context: Context, permissionString:String): Boolean{
+        fun checkPermission(context: Context, permissionString:String, requestCodeReturn:Int): Boolean{
             val nameOfPremission = permissionString
             val p = ContextCompat.checkSelfPermission(context, nameOfPremission) != PackageManager.PERMISSION_GRANTED
             if(p){
-                Toast.makeText(context, "Fail Permission: " + nameOfPremission, Toast.LENGTH_SHORT).show()
+                //Toast.makeText(context, "Fail Permission: " + nameOfPremission, Toast.LENGTH_SHORT).show()
                 //ask for permission
-                ActivityCompat.requestPermissions(context as Activity, arrayOf(nameOfPremission), 1)
+                ActivityCompat.requestPermissions(context as Activity, arrayOf(nameOfPremission), requestCodeReturn)
                 return false
             }
             else{

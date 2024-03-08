@@ -41,6 +41,15 @@
         android:textColor="@color/black"
         android:text="Start AI EAR Service" />
 
+    <Button
+        android:id="@+id/mButtonStopService"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="30dp"
+
+        android:textColor="@color/white"
+        android:text="Stop AI EAR Service" />
+
 
 
 </LinearLayout>

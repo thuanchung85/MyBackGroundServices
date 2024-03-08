@@ -45,6 +45,7 @@ class RunningService: Service() {
     override fun onDestroy() {
         super.onDestroy()
         stoptimertask()
+        MainActivity.stt.closeSpeechOperations()
     }
 
     @Override
@@ -58,7 +59,7 @@ class RunningService: Service() {
 
         when(intent?.action){
             Action.START.name -> start()
-            Action.STOP.name -> stopSelf()
+            Action.STOP.name -> stop()
         }
 
         return super.onStartCommand(intent, flags, startId)
@@ -71,5 +72,11 @@ class RunningService: Service() {
 
         startForeground(1, notification)
         MainActivity.stt.startSpeechRecognition()
+    }
+    private fun stop(){
+        stoptimertask()
+        MainActivity.stt.closeSpeechOperations()
+        stopSelf()
+
     }
 }

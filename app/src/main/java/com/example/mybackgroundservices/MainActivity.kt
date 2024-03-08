@@ -1,6 +1,7 @@
- package com.example.mybackgroundservices
+package com.example.mybackgroundservices
 
 import android.annotation.SuppressLint
+import android.app.ActivityManager
 import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
@@ -12,14 +13,11 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import android.widget.Button
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
-import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import com.example.foregroundservice.STT.Stt
 import com.example.foregroundservice.STT.SttListener
@@ -30,8 +28,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         lateinit var stt: Stt
     }
-    private var mToast: Toast? = null
-    var isPermissionOK: Boolean = false
+
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,34 +40,51 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        //setup stt engine
-        initSttEngine(this)
+
         //==check permission==//
 
-        //CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.WAKE_LOCK)
-        //CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.TURN_SCREEN_ON)
+         val p1 = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.RECORD_AUDIO, 1)
+        val p2 = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.POST_NOTIFICATIONS, 2)
 
-        var p = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.RECORD_AUDIO)
-        var p1 = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.POST_NOTIFICATIONS)
-        //if all OK
-        if(p && p1 )
-        {
-            isPermissionOK = true
-            activeButtons()
-        }
-
-        if(isPermissionOK){
-            //Toast.makeText(this, "WAKEUP", Toast.LENGTH_SHORT).show()
-            Intent(this, RunningService::class.java).also {
-                it.action = RunningService.Action.START.toString()
-                startService(it)
+        if(p1 && p2){
+            if(!isServiceRunning(RunningService::class.java.name)) {
+                Intent(this, RunningService::class.java).also {
+                    it.action = RunningService.Action.START.toString()
+                    //setup stt engine
+                    initSttEngine(this)
+                    startService(it)
+                }
             }
+            else{
+
+            }
+          activeButtons()
         }
+
 
 
     }
 
 
+    private fun isServiceRunning(serviceName: String): Boolean {
+        var serviceRunning = false
+        val am = this.getSystemService(ACTIVITY_SERVICE) as ActivityManager
+        val l = am.getRunningServices(50)
+        val i: Iterator<ActivityManager.RunningServiceInfo> = l.iterator()
+        while (i.hasNext()) {
+            val runningServiceInfo = i
+                .next()
+
+            if (runningServiceInfo.service.className == serviceName) {
+                serviceRunning = true
+
+                if (runningServiceInfo.foreground) {
+                    //service run in foreground
+                }
+            }
+        }
+        return serviceRunning
+    }
 
     //===================
     private fun initSttEngine(context: Context) {
@@ -94,14 +108,26 @@ class MainActivity : AppCompatActivity() {
                     triggerRebirth(context, MainActivity::class.java)
 
                 }
-                if(liveSpeechResult.contains("open")) {
+                if(liveSpeechResult.contains("do")) {
+
+
+                        Intent(context, RunningService::class.java).also {
+                            it.action = RunningService.Action.STOP.toString()
+                            startService(it)
+                        }
+
                     baseContext.startActivity(
                         Intent(
                             Intent.ACTION_VIEW,
 
-                            Uri.parse("http://google.com")
+                            Uri.parse("https://open.spotify.com/track/6gM3uxq9TPkms83bTSlK10")
                         ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     )
+
+
+
+
+
                 }
             }
 
@@ -133,6 +159,7 @@ class MainActivity : AppCompatActivity() {
                 //baseContext.startActivity(intent)
                 pendIntent.send(context, 0, intent)
                 //Runtime.getRuntime().exit(0)
+
                 val powerManager = context.getSystemService(POWER_SERVICE) as PowerManager
                 if (!powerManager.isInteractive) { // if screen is not already on, turn it on (get wake_lock)
                     @SuppressLint("InvalidWakeLockTag") val wl = powerManager.newWakeLock(
@@ -163,9 +190,11 @@ class MainActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if(requestCode == 1){
-            isPermissionOK = true
-            //Toast.makeText(this, "ALL Permission granted", Toast.LENGTH_SHORT).show()
 
+           CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.POST_NOTIFICATIONS, 2)
+
+        }
+        if(requestCode == 2){
             activeButtons()
         }
     }
@@ -181,14 +210,25 @@ class MainActivity : AppCompatActivity() {
                 //startService(it)
             //}
         }
+        val mButtonStopVoice = findViewById<Button>(R.id.mButtonStopService)
+        mButtonStopVoice.setOnClickListener {
 
-        //nut record voice
+                //Toast.makeText(this, "Start", Toast.LENGTH_SHORT).show()
+                Intent(this, RunningService::class.java).also {
+                    it.action = RunningService.Action.STOP.toString()
+                    startService(it)
+                }
+
+
+        }
+        //nut start ai ear service
         val mButtonRecordVoice = findViewById<Button>(R.id.mButtonStartService)
         mButtonRecordVoice.setOnClickListener {
-            if(isPermissionOK){
+            if(!isServiceRunning(RunningService::class.java.name)) {
                 //Toast.makeText(this, "Start", Toast.LENGTH_SHORT).show()
                 Intent(this, RunningService::class.java).also {
                     it.action = RunningService.Action.START.toString()
+                    initSttEngine(this)
                     startService(it)
                 }
             }
