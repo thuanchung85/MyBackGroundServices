@@ -29,7 +29,22 @@ class MainActivity : AppCompatActivity() {
         lateinit var stt: Stt
     }
 
+    override fun onResume() {
+        super.onResume()
 
+        val p1 = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.RECORD_AUDIO, 1)
+        val p2 = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.POST_NOTIFICATIONS, 2)
+        if(p1 && p2){
+            if(!isServiceRunning(RunningService::class.java.name)) {
+                Intent(this, RunningService::class.java).also {
+                    it.action = RunningService.Action.START.toString()
+                    //setup stt engine
+                    initSttEngine(this)
+                    startService(it)
+                }
+            }
+        }
+    }
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,7 +103,7 @@ class MainActivity : AppCompatActivity() {
 
     //===================
     private fun initSttEngine(context: Context) {
-        stt = Stt(application, object : SttListener {
+        stt = Stt("en",application, object : SttListener {
             override fun onSttLiveSpeechResult(liveSpeechResult: String) {
                 Log.d(application.packageName, "Speech result - $liveSpeechResult")
 
@@ -97,7 +112,17 @@ class MainActivity : AppCompatActivity() {
                // mToast = Toast.makeText(context, liveSpeechResult, Toast.LENGTH_SHORT)
                // mToast!!.show()
 
-                if(liveSpeechResult.contains("ello")){
+                if(liveSpeechResult.contains("ello") ||
+                    liveSpeechResult.contains("hello") ||
+                    liveSpeechResult.contains("hi") ||
+                    liveSpeechResult.contains("hey") ||
+                    liveSpeechResult.contains("xin chào") ||
+                    liveSpeechResult.contains("chào") ||
+                    liveSpeechResult.contains("안녕하세요")
+
+
+
+                    ){
                     //val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("myapp://"))
                     //startActivity(browserIntent)
                     //val intent: Intent = Intent(baseContext, MainActivity  ::class.java)
@@ -108,7 +133,15 @@ class MainActivity : AppCompatActivity() {
                     triggerRebirth(context, MainActivity::class.java)
 
                 }
-                if(liveSpeechResult.contains("do")) {
+                if(liveSpeechResult.contains("open") ||
+                    liveSpeechResult.contains(" 열려 있는") ||
+                    liveSpeechResult.contains(" play") ||
+                    liveSpeechResult.contains(" nhạc") ||
+                    liveSpeechResult.contains(" 놀다")
+
+
+
+                ) {
 
 
                         Intent(context, RunningService::class.java).also {
