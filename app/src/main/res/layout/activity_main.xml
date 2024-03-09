@@ -50,6 +50,14 @@
         android:textColor="@color/white"
         android:text="Stop AI EAR Service" />
 
+    <Button
+        android:id="@+id/mKoreanlanguage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="30dp"
+
+        android:textColor="@color/white"
+        android:text="Active KOREAN language" />
 
 
 </LinearLayout>

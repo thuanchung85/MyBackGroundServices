@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity() {
         lateinit var stt: Stt
     }
 
+    var langDefault = "en"
     override fun onResume() {
         super.onResume()
 
@@ -39,7 +40,7 @@ class MainActivity : AppCompatActivity() {
                 Intent(this, RunningService::class.java).also {
                     it.action = RunningService.Action.START.toString()
                     //setup stt engine
-                    initSttEngine(this)
+                    initSttEngine(this,langDefault)
                     startService(it)
                 }
             }
@@ -66,7 +67,7 @@ class MainActivity : AppCompatActivity() {
                 Intent(this, RunningService::class.java).also {
                     it.action = RunningService.Action.START.toString()
                     //setup stt engine
-                    initSttEngine(this)
+                    initSttEngine(this,langDefault)
                     startService(it)
                 }
             }
@@ -102,66 +103,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     //===================
-    private fun initSttEngine(context: Context) {
-        stt = Stt("en",application, object : SttListener {
-            override fun onSttLiveSpeechResult(liveSpeechResult: String) {
+    private fun initSttEngine(context: Context, langDefault:String) {
+        stt = Stt(langDefault,application, object : SttListener {
+            override fun onSttLiveSpeechResult(liveSpeechResult: String)
+            {
                 Log.d(application.packageName, "Speech result - $liveSpeechResult")
 
-                //mToast?.cancel()
-               // Toast.makeText(context, liveSpeechResult, Toast.LENGTH_SHORT).show()
-               // mToast = Toast.makeText(context, liveSpeechResult, Toast.LENGTH_SHORT)
-               // mToast!!.show()
-
-                if(liveSpeechResult.contains("ello") ||
-                    liveSpeechResult.contains("hello") ||
-                    liveSpeechResult.contains("hi") ||
-                    liveSpeechResult.contains("hey") ||
-                    liveSpeechResult.contains("xin chào") ||
-                    liveSpeechResult.contains("chào") ||
-                    liveSpeechResult.contains("안녕하세요")
-
-
-
-                    ){
-                    //val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("myapp://"))
-                    //startActivity(browserIntent)
-                    //val intent: Intent = Intent(baseContext, MainActivity  ::class.java)
-                    Log.d(application.packageName, "Speech result - HELLO TO REOPEN APP")
-                    //intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    //baseContext.startActivity(intent)
-
-                    triggerRebirth(context, MainActivity::class.java)
-
-                }
-                if(liveSpeechResult.contains("open") ||
-                    liveSpeechResult.contains(" 열려 있는") ||
-                    liveSpeechResult.contains(" play") ||
-                    liveSpeechResult.contains(" nhạc") ||
-                    liveSpeechResult.contains(" 놀다")
-
-
-
-                ) {
-
-
-                        Intent(context, RunningService::class.java).also {
-                            it.action = RunningService.Action.STOP.toString()
-                            startService(it)
-                        }
-
-                    baseContext.startActivity(
-                        Intent(
-                            Intent.ACTION_VIEW,
-
-                            Uri.parse("https://open.spotify.com/track/6gM3uxq9TPkms83bTSlK10")
-                        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    )
-
-
-
-
-
-                }
+                actionByVoice(liveSpeechResult)
             }
 
             fun triggerRebirth(context: Context, myClass: Class<*>?) {
@@ -204,12 +152,41 @@ class MainActivity : AppCompatActivity() {
 
             }
 
+            fun actionByVoice(txtCommand:String){
+                if(txtCommand.contains("ello") ||
+                    txtCommand.contains("hello") ||
+                    txtCommand.contains("hi") ||
+                    txtCommand.contains("hey") ||
+                    txtCommand.contains("xin chào") ||
+                    txtCommand.contains("chào") ||
+                    txtCommand.contains("안녕하세요")
+                ){
+                    Log.d(application.packageName, "Speech result - HELLO TO REOPEN APP")
+                    triggerRebirth(context, MainActivity::class.java)
+                }
+                if(txtCommand.contains("open") ||
+                    txtCommand.contains(" 열려 있는") ||
+                    txtCommand.contains(" play") ||
+                    txtCommand.contains(" nhạc") ||
+                    txtCommand.contains(" 놀다")
+                ) {
+                    Intent(context, RunningService::class.java).also {
+                        it.action = RunningService.Action.STOP.toString()
+                        startService(it)
+                    }
+
+                    baseContext.startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://www.youtube.com/watch?v=fo8baQK7qYc&autoplay=1")
+                        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                }
+            }
+
             override fun onSttFinalSpeechResult(speechResult: String) {
                 Log.d(application.packageName, "Speech result - $speechResult")
-                //mToast?.cancel()
-                //mToast = Toast.makeText(context, speechResult, Toast.LENGTH_SHORT)
-                //mToast!!.show()
-                //Toast.makeText(context, speechResult, Toast.LENGTH_SHORT).show()
+                actionByVoice(speechResult)
             }
 
             override fun onSttSpeechError(errMsg: String) {
@@ -233,16 +210,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun activeButtons(){
-        //nut stop chuông BG
+
+        //nut xin quyen khoi dong app khi dien thoai off
         val mButtonStop = findViewById<Button>(R.id.mButtonStop)
         mButtonStop.setOnClickListener {
             //Toast.makeText(this, "ACTION_MANAGE_OVERLAY_PERMISSION ", Toast.LENGTH_SHORT).show()
             startActivity( Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION));
-            //Intent(this, RunningService::class.java).also {
-                //it.action = RunningService.Action.STOP.toString()
-                //startService(it)
-            //}
+
         }
+
+        //nut stop service va micro
         val mButtonStopVoice = findViewById<Button>(R.id.mButtonStopService)
         mButtonStopVoice.setOnClickListener {
 
@@ -254,6 +231,7 @@ class MainActivity : AppCompatActivity() {
 
 
         }
+
         //nut start ai ear service
         val mButtonRecordVoice = findViewById<Button>(R.id.mButtonStartService)
         mButtonRecordVoice.setOnClickListener {
@@ -261,11 +239,43 @@ class MainActivity : AppCompatActivity() {
                 //Toast.makeText(this, "Start", Toast.LENGTH_SHORT).show()
                 Intent(this, RunningService::class.java).also {
                     it.action = RunningService.Action.START.toString()
-                    initSttEngine(this)
+                    initSttEngine(this,langDefault)
                     startService(it)
                 }
             }
 
+        }
+
+        //nut chuyen korean language
+        val mButtonKoreanVoice = findViewById<Button>(R.id.mKoreanlanguage)
+        mButtonKoreanVoice.setOnClickListener{
+
+
+            if(!isServiceRunning(RunningService::class.java.name)) {
+                langDefault = "ko"
+                //Toast.makeText(this, "Start", Toast.LENGTH_SHORT).show()
+                initSttEngine(this,langDefault)
+                Intent(this, RunningService::class.java).also {
+                    it.action = RunningService.Action.START.toString()
+                    initSttEngine(this,langDefault)
+                    startService(it)
+                }
+            }
+            else{
+                Intent(this, RunningService::class.java).also {
+                    it.action = RunningService.Action.STOP.toString()
+                    initSttEngine(this,langDefault)
+                    startService(it)
+                }
+                langDefault = "ko"
+                initSttEngine(this,langDefault)
+
+                Intent(this, RunningService::class.java).also {
+                    it.action = RunningService.Action.START.toString()
+                    initSttEngine(this,langDefault)
+                    startService(it)
+                }
+            }
         }
     }
 }
