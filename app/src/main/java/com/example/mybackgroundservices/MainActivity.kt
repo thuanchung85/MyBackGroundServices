@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.res.AssetFileDescriptor
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -22,6 +23,15 @@ import androidx.media3.common.util.Util
 import com.example.foregroundservice.STT.Stt
 import com.example.foregroundservice.STT.SttListener
 import com.example.mybackgroundservices.CHUNG_LIB.CheckPermission_Func
+import com.example.mybackgroundservices.CHUNG_LIB.MySingleton_LogsManager
+import org.tensorflow.lite.Interpreter
+import java.io.ByteArrayOutputStream
+import java.io.FileInputStream
+import java.io.IOException
+import java.io.InputStream
+import java.nio.ByteBuffer
+import java.nio.MappedByteBuffer
+import java.nio.channels.FileChannel
 
 
 class MainActivity : AppCompatActivity() {
@@ -73,7 +83,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-          activeButtons()
+          activeButtons(this)
         }
 
 
@@ -87,12 +97,12 @@ class MainActivity : AppCompatActivity() {
         stt = Stt(langDefault,application, object : SttListener {
             override fun onSttLiveSpeechResult(liveSpeechResult: String)
             {
-                Log.d(application.packageName, "Speech result - $liveSpeechResult")
+                //Log.d(application.packageName, "Speech result - $liveSpeechResult")
                 actionByVoice(context,liveSpeechResult)
             }
 
             override fun onSttFinalSpeechResult(speechResult: String) {
-                Log.d(application.packageName, "Speech result - $speechResult")
+                //Log.d(application.packageName, "Speech result - $speechResult")
                 actionByVoice(context,speechResult)
             }
 
@@ -112,11 +122,11 @@ class MainActivity : AppCompatActivity() {
            CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.POST_NOTIFICATIONS, 2)
         }
         if(requestCode == 2){
-            activeButtons()
+            activeButtons(this)
         }
     }
 
-    private fun activeButtons(){
+    private fun activeButtons(context:Context){
 
         //nut xin quyen khoi dong app khi dien thoai off
         val mButtonStop = findViewById<Button>(R.id.mButtonStop)
@@ -157,7 +167,12 @@ class MainActivity : AppCompatActivity() {
         val mButtonKoreanVoice = findViewById<Button>(R.id.mKoreanlanguage)
         mButtonKoreanVoice.setOnClickListener{
 
+           val returnByteBuffer =  loadModelFile("smallbertner")
 
+            val inter = returnByteBuffer?.let { it1 -> Interpreter(it1) }
+Log.e("myLOG",inter.hashCode().toString())
+
+            /*
             if(!isServiceRunning(RunningService::class.java.name)) {
                 langDefault = "ko"
                 //Toast.makeText(this, "Start", Toast.LENGTH_SHORT).show()
@@ -183,10 +198,19 @@ class MainActivity : AppCompatActivity() {
                     startService(it)
                 }
             }
+            */
+
         }
     }
 
-
+    private fun loadModelFile(filename:String): MappedByteBuffer? {
+        val fileDescriptor: AssetFileDescriptor = assets.openFd("$filename.tflite")
+        val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
+        val fileChannel: FileChannel = inputStream.channel
+        val startOffset: Long = fileDescriptor.startOffset
+        val declaredLength: Long = fileDescriptor.declaredLength
+        return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
+    }
     @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     fun triggerRebirth(context: Context, myClass: Class<*>?) {
         Log.d(application.packageName, "Speech result - triggerRebirth")
@@ -237,26 +261,32 @@ class MainActivity : AppCompatActivity() {
             txtCommand.contains("chào") ||
             txtCommand.contains("안녕하세요")
         ){
-            Log.d(application.packageName, "Speech result - HELLO TO REOPEN APP")
+
+            MySingleton_LogsManager.init(context,"myLOG :- $txtCommand -> TO REOPEN APP")
             triggerRebirth(context, MainActivity::class.java)
         }
+
         if(txtCommand.contains("open") ||
             txtCommand.contains(" 열려 있는") ||
             txtCommand.contains(" play") ||
             txtCommand.contains(" nhạc") ||
             txtCommand.contains(" 놀다")
         ) {
+
             Intent(context, RunningService::class.java).also {
                 it.action = RunningService.Action.STOP.toString()
                 startService(it)
             }
 
+            val playMusicURL = "https://www.youtube.com/watch?v=fo8baQK7qYc&autoplay=1"
             baseContext.startActivity(
                 Intent(
                     Intent.ACTION_VIEW,
-                    Uri.parse("https://www.youtube.com/watch?v=fo8baQK7qYc&autoplay=1")
+                    Uri.parse(playMusicURL)
                 ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             )
+
+            MySingleton_LogsManager.init(context,"myLOG :- $txtCommand -> STOP MICRO PHONE PLAY MUSIC $playMusicURL")
         }
     }
 

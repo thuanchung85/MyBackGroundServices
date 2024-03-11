@@ -20,7 +20,7 @@ class RunningService: Service() {
         timer = Timer()
         timerTask = object : TimerTask() {
             override fun run() {
-                Log.i("Speech result", "=========  " + (counter++))
+                Log.i("myLOG", "=========  " + (counter++))
             }
         }
         timer!!.schedule(timerTask, 1000, 1000) //

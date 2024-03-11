@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.mybackgroundservices"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -33,6 +33,9 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    buildFeatures {
+        mlModelBinding = true
+    }
 }
 
 dependencies {
@@ -43,6 +46,16 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.media3.common)
+
+
+
+    implementation ("org.tensorflow:tensorflow-lite:2.15.0")
+    implementation ("org.tensorflow:tensorflow-lite-gpu:2.15.0")
+    implementation ("org.tensorflow:tensorflow-lite-support:0.4.2")
+    implementation ("org.tensorflow:tensorflow-lite-select-tf-ops:2.15.0")
+    implementation ("org.tensorflow:tensorflow-lite-metadata:0.1.0-rc2")
+
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
