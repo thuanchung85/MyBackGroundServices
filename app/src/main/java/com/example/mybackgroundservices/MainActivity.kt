@@ -35,8 +35,8 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
 
         val p1 = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.RECORD_AUDIO, 1)
-        val p2 = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.POST_NOTIFICATIONS, 2)
-        if(p1 && p2){
+        //val p2 = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.POST_NOTIFICATIONS, 2)
+        if(p1 ){
             if(!isServiceRunning(RunningService::class.java.name)) {
                 Intent(this, RunningService::class.java).also {
                     it.action = RunningService.Action.START.toString()
@@ -61,9 +61,9 @@ class MainActivity : AppCompatActivity() {
         //==check permission==//
 
          val p1 = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.RECORD_AUDIO, 1)
-        val p2 = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.POST_NOTIFICATIONS, 2)
+        //val p2 = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.POST_NOTIFICATIONS, 2)
 
-        if(p1 && p2){
+        if(p1){
             if(!isServiceRunning(RunningService::class.java.name)) {
                 Intent(this, RunningService::class.java).also {
                     it.action = RunningService.Action.START.toString()
