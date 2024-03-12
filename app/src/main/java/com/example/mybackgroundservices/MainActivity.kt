@@ -24,20 +24,25 @@ import com.example.foregroundservice.STT.Stt
 import com.example.foregroundservice.STT.SttListener
 import com.example.mybackgroundservices.CHUNG_LIB.CheckPermission_Func
 import com.example.mybackgroundservices.CHUNG_LIB.MySingleton_LogsManager
+import com.example.mybackgroundservices.CHUNG_LIB.ReadJSONFromAssets
+
+
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import org.tensorflow.lite.Interpreter
-import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
-import java.io.IOException
-import java.io.InputStream
-import java.nio.ByteBuffer
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
+import java.util.Locale
 
 
 class MainActivity : AppCompatActivity() {
     companion object {
         lateinit var stt: Stt
     }
+    var  tflite:Interpreter? = null
+    lateinit var token2index:List<Any>
+    var mapOftoken2index:List<String> = listOf()
 
     private var langDefault = "en"
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -68,6 +73,28 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+        //load JSON file AI
+        //====load json file for AI===//
+        var token2indexString = ReadJSONFromAssets(baseContext,"token2index.json")
+        Log.e("myLOG", "AI JSON COMPLETED: ->" + token2indexString)
+        val gson = Gson()
+
+        val itemType = object : TypeToken<List<Any>>() {}.type
+         token2index = gson.fromJson<List<Any>>(token2indexString, itemType)
+
+        Log.e("myLOG", "GSON: ->" + token2index)
+         mapOftoken2index = token2index.map{
+            it.toString().drop(1).dropLast(1).split("=").first()
+        }
+
+        //=====init AI=====///
+        try {
+            tflite = Interpreter(loadModelFile("smallbertner")!!)
+            Log.e("myLOG", "AI init COMPLETED: ->"+ tflite.hashCode().toString())
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
+
         //==check permission==//
 
          val p1 = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.RECORD_AUDIO, 1)
@@ -85,8 +112,6 @@ class MainActivity : AppCompatActivity() {
 
           activeButtons(this)
         }
-
-
 
     }
 
@@ -167,38 +192,19 @@ class MainActivity : AppCompatActivity() {
         val mButtonKoreanVoice = findViewById<Button>(R.id.mKoreanlanguage)
         mButtonKoreanVoice.setOnClickListener{
 
-           val returnByteBuffer =  loadModelFile("smallbertner")
 
-            val inter = returnByteBuffer?.let { it1 -> Interpreter(it1) }
-Log.e("myLOG",inter.hashCode().toString())
 
-            /*
-            if(!isServiceRunning(RunningService::class.java.name)) {
-                langDefault = "ko"
-                //Toast.makeText(this, "Start", Toast.LENGTH_SHORT).show()
-                initSttEngine(this,langDefault)
-                Intent(this, RunningService::class.java).also {
-                    it.action = RunningService.Action.START.toString()
-                    initSttEngine(this,langDefault)
-                    startService(it)
-                }
+
+
+
+            //vào giai đoan kiem tra text string input và tao token data
+            if(this.tflite != null) {
+                //đây là text real input vào
+                val ss = localTokenizer("hello my name is playgroundvina", token2index)
+                Log.e("myLOG", "AI  localTokenizer: ->" + ss)
+
+
             }
-            else{
-                Intent(this, RunningService::class.java).also {
-                    it.action = RunningService.Action.STOP.toString()
-                    initSttEngine(this,langDefault)
-                    startService(it)
-                }
-                langDefault = "ko"
-                initSttEngine(this,langDefault)
-
-                Intent(this, RunningService::class.java).also {
-                    it.action = RunningService.Action.START.toString()
-                    initSttEngine(this,langDefault)
-                    startService(it)
-                }
-            }
-            */
 
         }
     }
@@ -211,6 +217,92 @@ Log.e("myLOG",inter.hashCode().toString())
         val declaredLength: Long = fileDescriptor.declaredLength
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
     }
+
+
+
+    fun localTokenizer(textInput: String, token2index: List<Any>): Map<String, List<Int>> {
+        val inputs = mutableMapOf(
+            "token_ids" to mutableListOf<Int>(),
+            "segment_ids" to MutableList(48) { 0 },
+            "padding_mask" to mutableListOf<Int>()
+        )
+
+        var textInputModified = "[CLS] ${textInput.lowercase(Locale.ROOT)} [SEP]"
+        val splitInputs = textInputModified.split(" ")
+
+
+        Log.e("myLOG", "AI  mapOftoken2index: ->" + mapOftoken2index)
+        for (item in splitInputs)
+        {
+
+
+            //nếu từ đó có trong token2index (TRƯỜNG HƠP TRÙNG 1 TỪ ĐƠN hello, my, name...)
+            if (item in mapOftoken2index) {
+                Log.e("myLOG", "AI  token có trong token2index: ->" + mapOftoken2index.indexOf(item))
+                val x = mapOftoken2index.indexOf(item)
+                inputs["token_ids"]?.add(x)
+                //inputs["padding_mask"]?.add(1)
+            }
+            //nếu không có trong token2index đơn (TRƯỜNG HỢP LÀ 1 TỪ GHÉP LẠI TỪ NHIỀU TỪ KHÁC playgroundvina = playground + vina)
+            else {
+                //phân tích sâu thêm nếu từ đó có chứa 1 phần tử nào đó của mapOftoken2index, như từ playground trong playgroundvina
+                //bước 1: lọc ra các từ có khả năng dòng họ với item nhất ghi vào array b
+                val b = mapOftoken2index.withIndex().filter {
+                    item.contains(it.value.replace("#",""), ignoreCase = true)
+
+                }//.map { it.index }
+                println(b)
+                //bước 2: so trùng, ươu tiên không có "#" trước, ta cần tách ra 2 array 1 bên không có "#" và 1 bên có "#"
+                val b2 = b.filter {
+                    !it.value.contains("#")
+                }
+                val b3coThang =  b - b2
+                println(b2)
+                println(b3coThang)
+
+                //chọn ra thằng có khả năng trùng lớn nhất trong array b2, chính là thằng dài nhất lấy ra làm đầu
+                val chooseBest = b2.maxBy { it.value.length }
+                println(chooseBest)
+                Log.e("myLOG", "AI  token có trong token2index MOT PHAN: ->" + chooseBest.index)
+                val x =  chooseBest.index
+                inputs["token_ids"]?.add(x)
+
+                //cắt lấy phần đuôi sau khi có phần đầu
+                val cutOutTail = item.replace(chooseBest.value,"")
+                println(cutOutTail)
+                //đem phần đuôi đi phân tích với b3coThang
+                val chooseBest2 = b3coThang.filter {
+                    it.value.contains(cutOutTail)
+                }
+                    .maxBy { it.value.length }
+                println(chooseBest2)
+                Log.e("myLOG", "AI  token có trong token2index MOT PHAN: ->" + chooseBest2.index)
+                val x2 =  chooseBest2.index
+                inputs["token_ids"]?.add(x2)
+
+                ///hoàn toàn không có nên fail 100%
+                //var temp = item
+                //var i = 0
+                ///var prefix = ""
+                //Log.e("myLOG", "AI  token KHONG có trong token2index: ->" + item)
+
+            }
+
+            Log.e("myLOG", "AI  token_ids: ->" + inputs["token_ids"])
+        }
+
+        repeat(48 - inputs["padding_mask"]!!.size) {
+            inputs["padding_mask"]?.add(0)
+        }
+
+        repeat(48 - inputs["token_ids"]!!.size) {
+            inputs["token_ids"]?.add(0)
+        }
+
+        return inputs
+    }
+
+
     @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     fun triggerRebirth(context: Context, myClass: Class<*>?) {
         Log.d(application.packageName, "Speech result - triggerRebirth")

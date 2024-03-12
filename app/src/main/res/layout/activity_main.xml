@@ -57,7 +57,7 @@
         android:layout_margin="30dp"
 
         android:textColor="@color/white"
-        android:text="Active KOREAN language" />
+        android:text="Active AI MODEL" />
 
 
 </LinearLayout>

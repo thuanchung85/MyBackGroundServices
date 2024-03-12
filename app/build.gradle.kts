@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    kotlin("plugin.serialization") version "1.9.22"
 }
 
 android {
@@ -54,10 +55,12 @@ dependencies {
     implementation ("org.tensorflow:tensorflow-lite-support:0.4.2")
     implementation ("org.tensorflow:tensorflow-lite-select-tf-ops:2.15.0")
     implementation ("org.tensorflow:tensorflow-lite-metadata:0.1.0-rc2")
-
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    implementation("com.google.code.gson:gson:2.8.9")
+
 
 }
