@@ -241,7 +241,7 @@ class MainActivity : AppCompatActivity() {
                 Log.e("myLOG", "AI  token có trong token2index: ->" + mapOftoken2index.indexOf(item))
                 val x = mapOftoken2index.indexOf(item)
                 inputs["token_ids"]?.add(x)
-                //inputs["padding_mask"]?.add(1)
+                inputs["padding_mask"]?.add(1)
             }
             //nếu không có trong token2index đơn (TRƯỜNG HỢP LÀ 1 TỪ GHÉP LẠI TỪ NHIỀU TỪ KHÁC playgroundvina = playground + vina)
             else {
@@ -266,6 +266,7 @@ class MainActivity : AppCompatActivity() {
                 Log.e("myLOG", "AI  token có trong token2index MOT PHAN: ->" + chooseBest.index)
                 val x =  chooseBest.index
                 inputs["token_ids"]?.add(x)
+                inputs["padding_mask"]?.add(1)
 
                 //cắt lấy phần đuôi sau khi có phần đầu
                 val cutOutTail = item.replace(chooseBest.value,"")
@@ -279,6 +280,7 @@ class MainActivity : AppCompatActivity() {
                 Log.e("myLOG", "AI  token có trong token2index MOT PHAN: ->" + chooseBest2.index)
                 val x2 =  chooseBest2.index
                 inputs["token_ids"]?.add(x2)
+                inputs["padding_mask"]?.add(1)
 
                 ///hoàn toàn không có nên fail 100%
                 //var temp = item
