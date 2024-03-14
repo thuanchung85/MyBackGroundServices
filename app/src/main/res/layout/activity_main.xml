@@ -26,7 +26,7 @@
 
 
     <Button
-        android:id="@+id/mButtonStop"
+        android:id="@+id/mWakeUpButtonPermission"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="30dp"
@@ -50,14 +50,27 @@
         android:textColor="@color/white"
         android:text="Stop AI EAR Service" />
 
+    <TextView
+        android:id="@+id/mSTTTtextview"
+        android:layout_width="301dp"
+        android:layout_height="47dp"
+        android:layout_gravity="center"
+        android:text="..."
+        android:textAlignment="center"
+        android:textSize="25dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
     <Button
-        android:id="@+id/mKoreanlanguage"
+        android:id="@+id/mCallCHATGPT"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="30dp"
-
         android:textColor="@color/white"
-        android:text="Active KOREAN language" />
+        android:text="CALL CHAT GPT API" />
 
 
 </LinearLayout>

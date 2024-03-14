@@ -45,7 +45,7 @@ class RunningService: Service() {
     override fun onDestroy() {
         super.onDestroy()
         stoptimertask()
-        MainActivity.stt.closeSpeechOperations()
+
     }
 
     @Override
@@ -71,11 +71,11 @@ class RunningService: Service() {
             .build()
 
         startForeground(1, notification)
-        MainActivity.stt.startSpeechRecognition()
+
     }
     private fun stop(){
         stoptimertask()
-        MainActivity.stt.closeSpeechOperations()
+
         stopSelf()
 
     }

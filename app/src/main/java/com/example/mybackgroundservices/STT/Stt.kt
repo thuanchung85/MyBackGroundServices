@@ -22,7 +22,7 @@ import android.R.attr.data
 
 
 class Stt(
-    private val chooseLanguage: String,
+
     private val app: Application,
     private val listener: SttListener
 ) : SttEngine() {
@@ -50,23 +50,10 @@ class Stt(
             RecognizerIntent.EXTRA_LANGUAGE_MODEL,
             RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
         )
-
-        if(chooseLanguage == "en"){
-            speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.ENGLISH.toString())
-        }else if(chooseLanguage == "ko"){
-            speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.KOREA.toString())
-        }
-        else{
-            speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-        }
-       // speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-        //speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.ENGLISH.toString())
-        //speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.KOREA.toString())
-        speechIntent.putExtra("android.speech.extra.GET_AUDIO_FORMAT", "audio/AMR");
-        speechIntent.putExtra("android.speech.extra.GET_AUDIO", true);
+        speechIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
         speechIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, app.packageName)
         speechIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-        speechIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+        speechIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
 
     }
 
