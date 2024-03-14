@@ -2,6 +2,7 @@ package com.example.mybackgroundservices
 
 import android.app.ActivityManager
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -18,7 +19,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.mybackgroundservices.CHUNG_LIB.CheckPermission_Func
-import java.util.ArrayList
+import com.example.mybackgroundservices.CHUNG_LIB.PROMT_DEMO.Companion.promt
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
+import java.io.IOException
 import java.util.Locale
 
 
@@ -28,6 +40,9 @@ class MainActivity : AppCompatActivity() {
     private var speechRecognizerIntent: Intent? = null
 
     private var mSTTTtextview: TextView? = null
+    //==for chat gpt==//
+    var apiKey = "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"
+    var client = OkHttpClient()
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -94,7 +109,6 @@ class MainActivity : AppCompatActivity() {
          val p1 = CheckPermission_Func.CheckPermission_Func.checkPermission(this,android.Manifest.permission.RECORD_AUDIO, 1)
 
         if(p1 ){
-
             if(!isServiceRunning(RunningService::class.java.name)) {
                 Intent(this, RunningService::class.java).also {
                     it.action = RunningService.Action.START.toString()
@@ -181,9 +195,110 @@ class MainActivity : AppCompatActivity() {
         val mCallCHATGPT = findViewById<Button>(R.id.mCallCHATGPT)
         mCallCHATGPT.setOnClickListener{
 
-
+            callAPI_ChatGPT(promt,mSTTTtextview!!.text.toString())
         }
     }
 
+
+
+    fun callAPI_ChatGPT(prompt:String,messagesInput: String) : String{
+        var returnCommand:String =""
+        val messages = listOf(
+            mapOf("role" to "system", "content" to prompt),
+            mapOf("role" to "user", "content" to messagesInput)
+        )
+        val JSON: MediaType = "application/json; charset=utf-8".toMediaType()
+
+        val jsonBody = JSONObject()
+        try{
+
+
+            jsonBody.put("model","gpt-3.5-turbo")
+            //jsonBody.put("prompt",prompt)
+            jsonBody.put("messages", JSONArray(messages.map { JSONObject(it) })) // Convert list of maps to JSONArray of JSONObjects
+            jsonBody.put("max_tokens",3500)
+            jsonBody.put("temperature",0.6)
+        }
+        catch (e: JSONException){
+            e.printStackTrace()
+        }
+        val body: RequestBody = RequestBody.create(JSON,jsonBody.toString())
+        val request: Request = Request.Builder()
+            .url("https://api.openai.com/v1/chat/completions")
+            .header("Authorization","Bearer $apiKey")
+            .post(body).build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("myLOG", "CHATGPT onFailure: ->${e.message}")
+            }
+
+            override fun onResponse(call: Call, response: okhttp3.Response) {
+                if(response.isSuccessful){
+                    var jsonObject:JSONObject? = null
+                    try{
+                        jsonObject = JSONObject(response.body!!.string())
+                        val jsonArray = jsonObject.getJSONArray("choices")
+                        val result = jsonArray.getJSONObject(0)
+
+                        val return_message = result["message"]
+
+                        println(return_message)
+                        val xx = JSONObject(return_message.toString())["content"]
+                        println(xx)
+                        Log.e("myLOG", "CHATGPT result: ->${xx}")
+                        returnCommand = xx.toString()
+                        ACTION(returnCommand)
+
+                    }
+                    catch (e:JSONException){
+                        e.printStackTrace()
+                    }
+                }
+                else{
+                    var jsonObject = JSONObject(response.body!!.string())
+                    Log.e("myLOG", "CHATGPT response.isSuccessful: -> FAIL ${jsonObject}")
+                }
+            }
+
+        })
+
+        return returnCommand
+    }
+
+    fun ACTION(cr_InPut:String){
+
+        runOnUiThread()
+        {
+            Toast.makeText(baseContext,cr_InPut,Toast.LENGTH_SHORT).show()
+            if (listOf("google", "web", "info", "text")
+                    .stream().anyMatch(cr_InPut.lowercase()::contains))
+            {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/"))
+                startActivity(intent)
+            }
+            else if (listOf("youtube", "video", "music", "song")
+                    .stream().anyMatch(cr_InPut.lowercase()::contains))
+            {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/"))
+                startActivity(intent)
+            }
+            else if (listOf("facebook", "social")
+                    .stream().anyMatch(cr_InPut.lowercase()::contains))
+            {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/"))
+                startActivity(intent)
+            }
+            else if (listOf("map", "direction")
+                    .stream().anyMatch(cr_InPut.lowercase()::contains))
+            {
+                val intent = Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("https://www.google.com/maps/@10.8396544,106.7319296,12z?entry=ttu")
+                )
+                startActivity(intent)
+            }
+        }
+    }
 }
 
